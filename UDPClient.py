@@ -1,0 +1,29 @@
+
+from socket import *
+
+
+
+serverName ='localhost' #"10.196.51.24" #IP adress / server website adress Mine: 10.30.44.14 #10.196.6.16
+serverPort = 4242
+
+
+clientSocket = socket(AF_INET,SOCK_DGRAM) #creates client socket
+
+
+while True:
+
+	message = input('input lowercase sentence: ')
+
+	if message == 'close' : break
+
+	clientSocket.sendto(message.encode(), (serverName, serverPort))
+
+	modifiedMessage, serverAddress = clientSocket.recvfrom(1024)
+
+	print(modifiedMessage.decode())
+
+clientSocket.close()
+
+
+
+
