@@ -42,22 +42,20 @@ def receive():
     while True:
         # Accept Connection
         client, address = server.accept()
-        print("TCP: Connected with {}".format(str(address)))
+        print(f"TCP: Connected with {str(address)}")
 
         # Request And Store Nickname
-
         while True:
-            #Asking for valid nickname until its correct
+            # Username validation
             client.send('NICK'.encode('ascii'))
             message = client.recv(1024).decode('ascii')
-            print(message)
+            print(f"TCP: {message}")
             if(message.split(" ")[0] not in accounts.keys()):
                 break
-
         nicknames.append(message)
         clients.append(client)
-
         accounts[message.split(" ")[0]] = message.split(" ")[1]
+
         # Print And Broadcast Nickname
         print("TCP: Nickname is {}".format(message.split(" ")[0]))
         broadcast("{} joined!".format(message.split(" ")[0]).encode('ascii'))
