@@ -1,5 +1,6 @@
 import socket
 import threading
+import sys
 from random import randint
 
 
@@ -8,18 +9,23 @@ SERVER = socket.gethostbyname(socket.gethostname())
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "!DISC"
 
+global is_connected
 is_connected = False # Flag
 
 def get_free_port():
     value = randint(2000, 9000)
     not_in_use = True
     while not_in_use:
+        value = randint(2000, 9000)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             not_in_use = s.connect_ex(('localhost', value)) == 0
     return value
 
 
 PORT = get_free_port()
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((SERVER, PORT))
 
 
 def send_client(conn):
@@ -33,50 +39,47 @@ def send_client(conn):
         send_length += b' ' * (HEADER - len(send_length))
         conn.send(send_length)
         conn.send(message)
+    print("Closing connection...")
+    conn.close()
+    sys.exit() # Kill Thread
 
 def recieve_client(conn):
-    is_connected = True
-    while is_connected:
+    while True:
         msg_length = conn.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
             print(f"{msg}")
             if msg == DISCONNECT_MESSAGE:
-                is_connected = False
-    conn.close()
+                break
+    print("Client disconnected")
+    sys.exit()  # kill thread
 
-def start_server():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((SERVER, PORT))
+def start_server(contact_thread):
     server.listen()
     print(f"Listening on {SERVER} with port {PORT}")
     while True:
         conn, addr = server.accept()
         print("CONNECTION ESTABLISHED")
+        contact_thread.join()
         listening_thread = threading.Thread(target=recieve_client, args=(conn,))
         listening_thread.start()
         messaging_thread = threading.Thread(target=send_client, args=(conn,))
         messaging_thread.start()
 
-def connect_client(add, port):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+def connect_client():
+    add = input("Enter Ip address: ")
+    port = int(input("Enter Port: "))
     client.connect((add, port))
     print("CONNECTION ESTABLISHED")
-    listening_thread = threading.Thread(target=recieve_client, args=(client,))
-    listening_thread.start()
     messaging_thread = threading.Thread(target=send_client, args=(client,))
     messaging_thread.start()
+    server.close() # Close listening server when connection is established
 
 
-listening_thread = threading.Thread(target=start_server)
-listening_thread.start()
 
-# The problem is that the listening Client thread is still waiting for a response from the user
-# to fix this, once the user establishes a connection, that thread should be killed
+client_connect_thread = threading.Thread(target=connect_client)
+client_connect_thread.start()
 
-if not is_connected:
-    add = input("enter add:" )
-    port = int(input("enter port: "))
-    connect_client(add, port)
-    is_connected = True
+start_server(client_connect_thread)

@@ -2,7 +2,7 @@ import socket
 import threading
 
 HEADER = 64
-PORT = 5050
+PORT = 8958
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "!DISC"
 SERVER = socket.gethostbyname(socket.gethostname())
