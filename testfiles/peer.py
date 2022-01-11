@@ -23,9 +23,10 @@ def get_free_port():
 
 
 PORT = get_free_port()
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((SERVER, PORT))
+SERVER_ADD = (SERVER, PORT)
+client = socket.socket(socket.AF_INET, socserver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ket.SOCK_STREAM)
+server.bind(SERVER_ADD)
 
 
 def send_client(conn):
@@ -55,13 +56,12 @@ def recieve_client(conn):
     print("Client disconnected")
     sys.exit()  # kill thread
 
-def start_server(contact_thread):
+def start_server():
     server.listen()
     print(f"Listening on {SERVER} with port {PORT}")
     while True:
         conn, addr = server.accept()
         print("CONNECTION ESTABLISHED")
-        contact_thread.join()
         listening_thread = threading.Thread(target=recieve_client, args=(conn,))
         listening_thread.start()
         messaging_thread = threading.Thread(target=send_client, args=(conn,))
@@ -78,8 +78,5 @@ def connect_client():
     server.close() # Close listening server when connection is established
 
 
-
-client_connect_thread = threading.Thread(target=connect_client)
-client_connect_thread.start()
-
-start_server(client_connect_thread)
+server_thread = threading.Thread(target=start_server)
+server_thread.start()
